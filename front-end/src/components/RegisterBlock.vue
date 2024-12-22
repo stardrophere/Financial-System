@@ -16,7 +16,7 @@
       </el-form>
       <!-- 注册按钮 -->
       <div class="button-container">
-        <el-button type="primary" @click="onSubmit" class="button-type" size="large">注册</el-button>
+        <el-button type="primary" @click="onSubmit" class="button_type" size="large">注册</el-button>
       </div>
     </el-card>
   </div>
@@ -25,6 +25,7 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
+import axios from "axios";
 
 // 注册表单数据
 const registerForm = reactive({
@@ -48,13 +49,24 @@ const registerFormRef = ref(null);
 const onSubmit = () => {
   registerFormRef.value.validate((valid) => {
     if (valid) {
-      ElMessage.success('注册成功！');
+      register();
     } else {
       ElMessage.error('请填写完整的注册信息');
     }
   });
 };
 
+
+
+const register = async () => {
+  try {
+    await axios.post("/register", registerForm);
+    ElMessage.success('注册成功！');
+
+  } catch (error) {
+    ElMessage.error(error.response.data.error);
+  }
+};
 </script>
 
 <style scoped>
@@ -87,7 +99,7 @@ const onSubmit = () => {
   width: 100%;
 }
 
-.button-type{
+.button_type{
   width: 100%;
 }
 </style>

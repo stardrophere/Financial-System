@@ -49,7 +49,7 @@
 import { ref } from 'vue';
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:5000";
+// axios.defaults.baseURL = "http://localhost:5000";
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -80,10 +80,11 @@ const login = async () => {
     const token = response.data.token;
     localStorage.setItem("token", token);
     isLoggedIn.value = true;
-    fetchRecords();
-    fetchSummary();
+    // fetchRecords();
+    // fetchSummary();
   } catch (error) {
     alert(error.response?.data?.error || "登录失败");
+    console.log(error.response.data.error);
   }
 };
 
@@ -123,7 +124,7 @@ const logout = () => {
 };
 </script>
 
-<style>
+<style scoped>
 #app {
   font-family: Arial, sans-serif;
   margin: 20px;

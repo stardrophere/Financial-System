@@ -102,20 +102,24 @@ def login():
     失败：{"error": "无效的凭据。"}
     状态码：200 或 401
     """
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({"error": "无效的凭据。"}), 401
+        user = User.query.filter_by(username=username).first()
+        if not user or not check_password_hash(user.password_hash, password):
+            return jsonify({"error": "账号或密码错误"}), 401
 
-    token = jwt.encode({
-        'user_id': user.id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    }, app.config['SECRET_KEY'], algorithm="HS256")
+        token = jwt.encode({
+            'user_id': user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
 
-    return jsonify({"message": "登录成功。", "token": token}), 200
+        return jsonify({"message": "登录成功。", "token": token}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
 
 @app.route('/records', methods=['POST'])
 @token_required
@@ -138,12 +142,12 @@ def add_record(current_user):
     data = request.json
     amount = data.get('amount')
     category = data.get('category')
-    type = data.get('type')
+    typeData = data.get('type')
 
     if not all([amount, category, type]):
         return jsonify({"error": "所有字段都是必填项。"}), 400
 
-    record = Record(user_id=current_user.id, amount=amount, category=category, type=type)
+    record = Record(user_id=current_user.id, amount=amount, category=category, type=typeData)
     db.session.add(record)
     db.session.commit()
     return jsonify({"message": "记录添加成功。"}), 201
