@@ -90,6 +90,7 @@ const change_style = () => {
 body{
   overflow: hidden;
 }
+
 .center-container {
   display: flex;
   justify-content: center;
@@ -117,6 +118,7 @@ body{
   justify-content: center;
   align-items: center;
   position: relative;
+  margin-bottom: 5vh;
 }
 
 .form-box {

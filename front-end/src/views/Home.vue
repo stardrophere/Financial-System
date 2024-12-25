@@ -1,9 +1,10 @@
 <script setup>
-import TopBar from "@/components/topBar.vue";
+import V1 from "@/components/v1.vue";
+
 </script>
 
 <template>
-<TopBar />
+  <V1/>
 </template>
 
 <style scoped>

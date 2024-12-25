@@ -72,8 +72,8 @@ const loginIn = async () => {
   } catch (error) {
     const msg = error.response.data.error
     console.log(msg)
-    if(msg==="账号或密码错误") ElMessage.error('账号或密码错误');
-    else ElMessage.error("登录失败");
+    ElMessage.error(msg);
+
 
   }
 };

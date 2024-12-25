@@ -3,3 +3,4 @@ Flask-Cors==3.0.10
 Flask-SQLAlchemy==3.0.4
 PyJWT==2.1
 Werkzeug==2.2.3
+pytz==2024.2

@@ -26,101 +26,103 @@
             <option value="income">收入</option>
             <option value="expense">支出</option>
           </select>
+          <input v-model="recordForm.note" placeholder="备注（可选）" />
           <button type="submit">添加记录</button>
         </form>
 
         <h2>收支明细</h2>
         <ul>
           <li v-for="record in records" :key="record.id">
-            {{ record.date }} - {{ record.category }} - {{ record.amount }} - {{ record.type }}
+            {{ record.date }} - {{ record.category }} - {{ record.amount }} - {{ record.type }} - {{ record.note }}
+            <button @click="deleteRecord(record.id)">删除</button>
+            <button @click="editRecord(record)">编辑</button>
           </li>
         </ul>
-
-        <h2>账单汇总</h2>
-        <p>总收入: {{ summary.total_income }}</p>
-        <p>总支出: {{ summary.total_expense }}</p>
-        <p>结余: {{ summary.balance }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import axios from "axios";
+import {ref} from 'vue';
+import axios from 'axios';
 
-// axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = 'http://localhost:5000';
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = token;
   }
   return config;
 }, (error) => Promise.reject(error));
 
+// 响应式数据
 const isLoggedIn = ref(false);
-const loginForm = ref({ username: "", password: "" });
-const registerForm = ref({ username: "", password: "" });
-const recordForm = ref({ amount: null, category: "", type: "income" });
+const registerForm = ref({username: '', password: ''});
+const loginForm = ref({username: '', password: ''});
+const recordForm = ref({amount: null, category: '', type: 'income', note: ''});
 const records = ref([]);
-const summary = ref({ total_income: 0, total_expense: 0, balance: 0 });
 
+// 方法
 const register = async () => {
   try {
-    await axios.post("/register", registerForm.value);
-    alert("注册成功，请登录！");
+    await axios.post('/register', registerForm.value);
+    alert('注册成功，请登录！');
   } catch (error) {
-    alert(error.response?.data?.error || "注册失败");
+    alert(error.response?.data?.error || '注册失败');
   }
 };
 
 const login = async () => {
   try {
-    const response = await axios.post("/login", loginForm.value);
-    const token = response.data.token;
-    localStorage.setItem("token", token);
+    const response = await axios.post('/login', loginForm.value);
+    localStorage.setItem('token', response.data.token);
     isLoggedIn.value = true;
-    // fetchRecords();
-    // fetchSummary();
+    fetchRecords();
   } catch (error) {
-    alert(error.response?.data?.error || "登录失败");
-    console.log(error.response.data.error);
+    alert(error.response?.data?.error || '登录失败');
   }
 };
 
 const addRecord = async () => {
   try {
-    await axios.post("/records", recordForm.value);
-    alert("记录添加成功！");
+    await axios.post('/records', recordForm.value);
+    alert('记录添加成功！');
     fetchRecords();
-    fetchSummary();
   } catch (error) {
-    alert(error.response?.data?.error || "添加记录失败");
+    alert(error.response?.data?.error || '添加记录失败');
   }
 };
 
 const fetchRecords = async () => {
   try {
-    const response = await axios.get("/records");
+    const response = await axios.get('/records');
     records.value = response.data;
+    console.log(records.value);
   } catch (error) {
-    alert("获取记录失败");
+    alert('获取记录失败');
   }
 };
 
-const fetchSummary = async () => {
+const deleteRecord = async (recordId) => {
   try {
-    const response = await axios.get("/summary");
-    summary.value = response.data;
+    await axios.delete(`/records/${recordId}`);
+    alert('记录删除成功！');
+    fetchRecords();
   } catch (error) {
-    alert("获取汇总失败");
+    alert('删除记录失败');
   }
 };
 
-const logout = () => {
-  localStorage.removeItem("token");
-  isLoggedIn.value = false;
-  alert("已登出");
+const editRecord = async (record) => {
+  const updatedRecord = {...record, note: prompt('修改备注：', record.note)};
+  try {
+    await axios.put(`/records/${record.id}`, updatedRecord);
+    alert('记录更新成功！');
+    fetchRecords();
+  } catch (error) {
+    alert('更新记录失败');
+  }
 };
 </script>
 
@@ -129,6 +131,7 @@ const logout = () => {
   font-family: Arial, sans-serif;
   margin: 20px;
 }
+
 input, button, select {
   margin: 5px;
 }

@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
+from pytz import timezone
 
 app = Flask(__name__)
 CORS(app)
@@ -17,6 +18,9 @@ app.config['SECRET_KEY'] = 'your_secret_key'  # 用于生成和验证 JWT 的密
 
 db = SQLAlchemy(app)
 
+# 配置东八区时区
+east_asia_tz = timezone('Asia/Shanghai')
+
 # 数据库模型
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -28,30 +32,32 @@ class Record(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # 关联的用户ID
     amount = db.Column(db.Float, nullable=False)  # 金额
     category = db.Column(db.String(50), nullable=False)  # 类别
-    date = db.Column(db.DateTime, default=datetime.datetime.utcnow)  # 日期
+    date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(east_asia_tz))  # 日期，东八区
     type = db.Column(db.String(10), nullable=False)  # 类型：收入或支出
+    note = db.Column(db.String(255), nullable=True)  # 备注字段（可选）
 
 # 使用 session.get() 替代 query.get() 解决警告问题
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
+        token = request.headers.get('Authorization')  # 从请求头中获取令牌
         if not token:
             return jsonify({"error": "令牌缺失。"}), 401
 
         try:
+            # 解码令牌，验证合法性，并提取用户信息
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            # 替换 User.query.get() 为 db.session.get()
+            # 使用用户 ID 从数据库中获取当前用户对象
             current_user = db.session.get(User, data['user_id'])
             if not current_user:
                 raise ValueError("用户不存在。")
         except Exception as e:
             return jsonify({"error": f"令牌无效：{str(e)}"}), 401
 
+        # 将 current_user 传递给被装饰的函数
         return f(current_user, *args, **kwargs)
 
     return decorated
-
 
 # 路由
 @app.route('/register', methods=['POST'])
@@ -99,7 +105,7 @@ def login():
     }
     返回：
     成功：{"message": "登录成功。", "token": "JWT 令牌"}
-    失败：{"error": "无效的凭据。"}
+    失败：{"error": "用户不存在。" 或 "账号或密码错误。"}
     状态码：200 或 401
     """
     try:
@@ -107,19 +113,25 @@ def login():
         username = data.get('username')
         password = data.get('password')
 
+        # 检查用户是否存在
         user = User.query.filter_by(username=username).first()
-        if not user or not check_password_hash(user.password_hash, password):
-            return jsonify({"error": "账号或密码错误"}), 401
+        if not user:
+            return jsonify({"error": "用户不存在。"}), 401
 
+        # 验证密码
+        if not check_password_hash(user.password_hash, password):
+            return jsonify({"error": "账号或密码错误。"}), 401
+
+        # 生成 JWT 令牌
         token = jwt.encode({
             'user_id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
         }, app.config['SECRET_KEY'], algorithm="HS256")
 
         return jsonify({"message": "登录成功。", "token": token}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 401
+        return jsonify({"error": "登陆失败"}), 401
 
 @app.route('/records', methods=['POST'])
 @token_required
@@ -132,7 +144,8 @@ def add_record(current_user):
     {
         "amount": 金额,
         "category": "类别",
-        "type": "income 或 expense"
+        "type": "income 或 expense",
+        "note": "备注（可选）"
     }
     返回：
     成功：{"message": "记录添加成功。"}
@@ -142,12 +155,13 @@ def add_record(current_user):
     data = request.json
     amount = data.get('amount')
     category = data.get('category')
-    typeData = data.get('type')
+    type_data = data.get('type')
+    note = data.get('note')  # 可选字段
 
-    if not all([amount, category, type]):
+    if not all([amount, category, type_data]):
         return jsonify({"error": "所有字段都是必填项。"}), 400
 
-    record = Record(user_id=current_user.id, amount=amount, category=category, type=typeData)
+    record = Record(user_id=current_user.id, amount=amount, category=category, type=type_data, note=note)
     db.session.add(record)
     db.session.commit()
     return jsonify({"message": "记录添加成功。"}), 201
@@ -160,7 +174,7 @@ def get_records(current_user):
     返回与当前用户关联的所有收入或支出记录。
 
     返回：
-    成功：记录列表
+    成功：记录列表，包括备注
     状态码：200
     """
     records = Record.query.filter_by(user_id=current_user.id).all()
@@ -169,8 +183,10 @@ def get_records(current_user):
             "id": record.id,
             "amount": record.amount,
             "category": record.category,
-            "date": record.date.strftime('%Y-%m-%d'),
-            "type": record.type
+            "date": record.date.strftime('%Y-%m-%d %H:%M'),
+            "timestamp": int(record.date.timestamp()),  # 返回时间戳
+            "type": record.type,
+            "note": record.note  # 返回备注字段
         } for record in records
     ]
     return jsonify(records_list), 200
@@ -180,18 +196,19 @@ def get_records(current_user):
 def update_record(current_user, record_id):
     """
     更新记录。
-    用户可以更新指定记录的金额、类别、类型或日期。
+    用户可以更新指定记录的金额、类别、类型、日期或备注。
 
     请求数据：
     {
         "amount": 新金额,
         "category": "新类别",
         "type": "income 或 expense",
-        "date": "新日期 (可选，格式：YYYY-MM-DD)"
+        "timestamp": 日期时间戳 (可选，单位：秒),
+        "note": "备注（可选）"
     }
     返回：
     成功：{"message": "记录更新成功。"}
-    失败：{"error": "记录未找到。" 或 "无效的日期格式，应为 YYYY-MM-DD。"}
+    失败：{"error": "记录未找到。" 或 "无效的时间戳。"}
     状态码：200 或 404
     """
     data = request.json
@@ -200,17 +217,21 @@ def update_record(current_user, record_id):
     if not record:
         return jsonify({"error": "记录未找到。"}), 404
 
+    # 更新记录字段
     record.amount = data.get('amount', record.amount)
     record.category = data.get('category', record.category)
     record.type = data.get('type', record.type)
-    if 'date' in data:
+    record.note = data.get('note', record.note)  # 更新备注内容
+
+    # 如果前端传递了时间戳，则将其转换为 datetime 对象
+    if 'timestamp' in data:
         try:
-            record.date = datetime.datetime.strptime(data['date'], '%Y-%m-%d')
-        except ValueError:
-            return jsonify({"error": "无效的日期格式，应为 YYYY-MM-DD。"}), 400
+            record.date = datetime.datetime.fromtimestamp(data['timestamp'], tz=east_asia_tz)
+        except (ValueError, TypeError):
+            return jsonify({"error": "无效的时间戳。"}), 400
 
     db.session.commit()
-    return jsonify({"message": "记录更新成功。"}), 200
+    return jsonify({"message": "记录更新成功。", "updated_date": record.date.strftime('%Y-%m-%d %H:%M')}), 200
 
 @app.route('/records/<int:record_id>', methods=['DELETE'])
 @token_required
