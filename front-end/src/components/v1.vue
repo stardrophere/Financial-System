@@ -60,7 +60,7 @@ axios.interceptors.request.use((config) => {
 const isLoggedIn = ref(false);
 const registerForm = ref({username: '', password: ''});
 const loginForm = ref({username: '', password: ''});
-const recordForm = ref({amount: null, category: '', type: 'income', note: ''});
+const recordForm = ref({amount: null, category: '', type: 'income', note: '',timeStamp:1735638043000});
 const records = ref([]);
 
 // 方法

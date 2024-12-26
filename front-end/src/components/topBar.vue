@@ -11,13 +11,13 @@
       router
   >
     <!-- logo部分 -->
-    <el-menu-item >
+    <el-menu-item>
       <el-dropdown @command="handleCommand" trigger="click">
         <span class="el-dropdown-link">
           <img
               style="width: 50px"
               src="@/assets/logo.webp"
-              alt="Element logo"
+              alt="logo"
               class="icon"
           />
         </span>
@@ -35,10 +35,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'  // 导入 vue-router 用于跳转
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage} from "element-plus";  // 导入 vue-router 用于跳转
 
-const activeIndex = ref('1')
 
 // 获取 router 实例
 const router = useRouter()
@@ -53,10 +53,12 @@ const handleCommand = (command: string) => {
   if (command === 'logout') {
     // 在这里处理注销登录逻辑
     // 例如，清除用户认证信息、token 等
-    console.log('用户注销登录')
+    console.log('用户注销登录');
+    localStorage.removeItem('token');
+
 
     // 显示成功消息
-    alert('注销成功！')
+    ElMessage.success("注销成功");
 
     // 跳转到登录页面
     navigateTo("/loginRegister")

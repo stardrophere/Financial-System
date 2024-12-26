@@ -25,12 +25,12 @@
     </el-row>
 
     <el-row gutter={20} class="pie-charts">
-      <el-col :span="12">
+      <el-col :span="24" :md="12">
         <el-card>
           <div ref="incomePieChart" class="pie-chart"></div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="24" :md="12">
         <el-card>
           <div ref="expensePieChart" class="pie-chart"></div>
         </el-card>
@@ -43,15 +43,19 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount} from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import * as echarts from 'echarts';
-import {ElMessage, ElMessageBox, ElLoading} from 'element-plus';
+import { ElMessage } from 'element-plus';
 
 // 定义响应式数据
 const selectedPeriod = ref('year'); // 默认选择按年汇总
 const summaryData = ref([]);
 const pieData = ref({
+  period: '',
+  year: null,
+  month: null,
+  day: null,
   income_categories: [],
   expense_categories: []
 });
@@ -64,6 +68,37 @@ let expensePieChartInstance = null;
 
 // Loading 状态
 const fullscreenLoading = ref(false);
+
+// 弹窗方法
+// 错误弹窗
+const ErrorPop = (info, time = 3000) => {
+  ElMessage({
+    showClose: true,
+    message: info,
+    type: 'error',
+    duration: time
+  });
+};
+
+// 成功弹窗
+const SuccessPop = (info, time = 3000) => {
+  ElMessage({
+    showClose: true,
+    message: info,
+    type: 'success',
+    duration: time
+  });
+};
+
+// 警告弹窗
+const WarningPop = (info, time = 3000) => {
+  ElMessage({
+    showClose: true,
+    message: info,
+    type: 'warning',
+    duration: time
+  });
+};
 
 // 获取汇总数据
 const fetchSummaryData = async () => {
@@ -78,6 +113,10 @@ const fetchSummaryData = async () => {
       renderLineChart();
       // 清空之前的饼图数据
       pieData.value = {
+        period: '',
+        year: null,
+        month: null,
+        day: null,
         income_categories: [],
         expense_categories: []
       };
@@ -113,6 +152,21 @@ const fetchPieData = async (timeParams) => {
   } finally {
     fullscreenLoading.value = false;
   }
+};
+
+// 获取时间描述
+const getTimeDescription = () => {
+  const {period, year, month, day} = pieData.value;
+  if (period === 'year') {
+    return `${year}年的`;
+  } else if (period === 'month的') {
+    return `${year}年${month}月的`;
+  } else if (period === 'day') {
+    return `${year}年${month}月${day}日的`;
+  } else if (period === 'overall') {
+    return '整体的';
+  }
+  return '空白的';
 };
 
 // 渲染折线图
@@ -265,9 +319,11 @@ const renderPieCharts = () => {
     expensePieChartInstance = echarts.init(expensePieChart.value);
   }
 
+  const timeDesc = getTimeDescription();
+
   const incomeOption = {
     title: {
-      text: '收入分类分布',
+      text: `${timeDesc}收入分类分布`,
       left: 'center',
       textStyle: {
         fontSize: 16,
@@ -304,7 +360,7 @@ const renderPieCharts = () => {
 
   const expenseOption = {
     title: {
-      text: '支出分类分布',
+      text: `${timeDesc}支出分类分布`,
       left: 'center',
       textStyle: {
         fontSize: 16,
@@ -391,37 +447,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', incomePieChartInstance?.resize);
   window.removeEventListener('resize', expensePieChartInstance?.resize);
 });
-
-// 弹窗方法
-// 错误弹窗
-const ErrorPop = (info, time = 3000) => {
-  ElMessage({
-    showClose: true,
-    message: info,
-    type: 'error',
-    duration: time
-  });
-};
-
-// 成功弹窗
-const SuccessPop = (info, time = 3000) => {
-  ElMessage({
-    showClose: true,
-    message: info,
-    type: 'success',
-    duration: time
-  });
-};
-
-// 警告弹窗
-const WarningPop = (info, time = 3000) => {
-  ElMessage({
-    showClose: true,
-    message: info,
-    type: 'warning',
-    duration: time
-  });
-};
 </script>
 
 <style scoped>
