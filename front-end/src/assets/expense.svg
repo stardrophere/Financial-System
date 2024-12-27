@@ -1,0 +1,59 @@
+<svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景图层，用于包含整个图标 -->
+    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+
+    <!-- 跟踪路径图层，通常用于辅助调试或者是细节路径 -->
+    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+
+    <!-- 主图标内容 -->
+    <g id="SVGRepo_iconCarrier">
+        <!-- 箭头1，指向上，表示收入或增加 -->
+        <path d="M35 38L40 33L34.9996 28"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 箭头2，指向上，表示收入或增加 -->
+        <path d="M43 38L48 33L42.9996 28"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 外框部分：垂直的边框路径，代表一个框架 -->
+        <path d="M43 22V9C43 7.89543 42.1046 7 41 7H7C5.89543 7 5 7.89543 5 9V39C5 40.1046 5.89543 41 7 41H28.4706"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 中间的水平箭头，指向右，表示某种转移或方向 -->
+        <path d="M13 15L18 21L23 15"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 水平线：表示在框架中水平的分割线 -->
+        <path d="M12 27H24"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 水平线：另一条表示分隔的水平线 -->
+        <path d="M12 21H24"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+        <!-- 竖直线，连接上面箭头与下面的框架 -->
+        <path d="M18 21V33"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+    </g>
+</svg>

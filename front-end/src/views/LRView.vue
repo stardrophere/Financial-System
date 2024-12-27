@@ -1,20 +1,22 @@
 <template>
   <div class="back_ground">
-    <div><TopBar/></div>
+    <div class="top-bar">
+      <TopBar/>
+    </div>
     <div class="center-container">
       <div class="container">
         <div class="form-box" :style="refstyle" v-loading=loading_tip element-loading-background="#d3b7d8">
 
           <div class="register-box" v-show=show_change>
             <h1>register</h1>
-            <registerBlock />
+            <registerBlock @change="change_style"/>
 
           </div>
           <!-- 登录 -->
           <div class="login-box" v-show=!show_change>
             <h1>login</h1>
 
-            <loginBlock />
+            <loginBlock/>
           </div>
         </div>
 
@@ -22,7 +24,7 @@
         <!-- 左右显示内容 -->
         <div class="con-box left">
           <h2>欢迎来到<span>财务宝</span></h2>
-          <p> </p>
+          <p></p>
           <img src="@\assets\logo.webp" alt="" class="logo">
           <p>已有账号</p>
           <button id="login" @click="change_style">去登录</button>
@@ -30,7 +32,7 @@
 
         <div class="con-box right">
           <h2>欢迎来到<span>财务宝</span></h2>
-          <p> </p>
+          <p></p>
           <img src="@\assets\logo.webp" alt="" class="logo">
           <p>没有账号?</p>
           <button id="register" @click="change_style">去注册</button>
@@ -40,11 +42,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { StarFilled,CirclePlusFilled } from '@element-plus/icons-vue'
+<script setup>
 import registerBlock from '@/components/Registerblock.vue';
 import loginBlock from '@/components/LoginBlock.vue';
-import { ref } from 'vue'
+import {ref} from 'vue'
 import TopBar from "@/components/topBar.vue";
 
 
@@ -52,13 +53,12 @@ let slide_tip = false
 let refstyle = ref({
   transform: 'translateX(0%)'
 })
-let kf=ref({
+let kf = ref({
   'background-color': "#d3b7d8"
 })
 let show_change = ref(false)
 let loading_tip = ref(false)
 let useless = true
-
 
 
 function loading_seconds(seconds) {
@@ -87,9 +87,16 @@ const change_style = () => {
 </script>
 
 <style scoped>
-body{
-  overflow: hidden;
+/* 固定顶部栏 */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* 确保顶部栏在最上层 */
+
 }
+
 .center-container {
   display: flex;
   justify-content: center;
@@ -102,9 +109,10 @@ body{
 
 }
 
-.back_ground{
+.back_ground {
   overflow: hidden;
 }
+
 .container {
   background-color: #ffffff;
   width: 650px;
@@ -117,6 +125,7 @@ body{
   justify-content: center;
   align-items: center;
   position: relative;
+
 }
 
 .form-box {
@@ -223,8 +232,8 @@ h1 {
   color: #fff;
 }
 
-.logo{
+.logo {
   border-radius: 50%;
-  height:1500px
+  height: 1500px
 }
 </style>
