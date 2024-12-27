@@ -25,7 +25,7 @@ import TopBar from "@/components/TopBar.vue";
 .back-ground {
   height: 100vh;
   width: 100%;
-  background: linear-gradient(to right, #e0eafc, #cfdef3);
+  background: linear-gradient(200deg, #f3e7e9, #cddffa);
 }
 /* 页面内容容器 */
 .page-container {
@@ -35,8 +35,9 @@ import TopBar from "@/components/TopBar.vue";
   padding: 20px; /* 可选：添加内边距 */
   padding-top: 75px; /* 根据顶部栏高度调整 */
   /* 可选：添加背景样式 */
-  background: linear-gradient(to right, #e0eafc, #cfdef3);
-  min-height: 92vh;
+  background: linear-gradient(200deg, #f3e7e9, #cddffa);
+
+  max-height: 90%;
 }
 
 /* 响应式调整（可选） */

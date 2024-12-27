@@ -71,8 +71,7 @@
           style="width: 100%;"
           @selection-change="handleSelectionChange"
           ref="tableRef"
-          max-height="1080px"
-
+          :max-height="tableMaxHeight"
       >
         <!-- 多选列 -->
         <el-table-column type="selection" width="55"></el-table-column>
@@ -173,7 +172,7 @@
 
 <script setup>
 import {ElMessage} from "element-plus";
-import {ref, computed, nextTick} from "vue";
+import {ref, computed, nextTick, onBeforeUnmount, onMounted} from "vue";
 import axios from "axios";
 import {categoryColors} from "@/config/colors.js"; // 类别颜色库
 import RecordChange from "@/components/RecordChange.vue";
@@ -513,6 +512,27 @@ const uploadFile = async (file) => {
     isUploading.value = false;
   }
 };
+
+const tableMaxHeight = ref(600); // 初始值
+
+function updateTableHeight() {
+  // 这里写你计算高度的逻辑
+  // 举例：用窗口高度减去上面一些元素的高度
+  const headerHeight = 250; // 比如顶部布局 + margin 占了 150px
+  tableMaxHeight.value = window.innerHeight - headerHeight;
+}
+
+onMounted(() => {
+  // 组件挂载后先计算一次
+  updateTableHeight();
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', updateTableHeight);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateTableHeight);
+});
 </script>
 
 <style scoped>

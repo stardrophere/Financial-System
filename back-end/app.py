@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 配置 SQLAlchemy 数据库路径
-db_path = "sqlite:///budget_system.db"
+db_path = "sqlite:///user_info.db"
 app.config['SQLALCHEMY_DATABASE_URI'] = db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your_secret_key'  # 用于生成和验证 JWT 的密钥
@@ -132,11 +132,11 @@ def login():
         # 检查用户是否存在
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({"error": "用户不存在。"}), 401
+            return jsonify({"error": "用户不存在。"}), 400
 
         # 验证密码
         if not check_password_hash(user.password_hash, password):
-            return jsonify({"error": "账号或密码错误。"}), 401
+            return jsonify({"error": "账号或密码错误。"}), 400
 
         # 生成 JWT 令牌
         token = jwt.encode({
@@ -147,7 +147,7 @@ def login():
         return jsonify({"message": "登录成功。", "token": token}), 200
 
     except Exception as e:
-        return jsonify({"error": "登陆失败"}), 401
+        return jsonify({"error": "登陆失败"}), 400
 
 
 @app.route('/records', methods=['POST'])
@@ -625,7 +625,7 @@ def upload_file(current_user):
                 # 提取并映射数据
                 amount = float(row['金额'])
                 category = str(row['类别'])
-                type_data = str(row['类型']).lower()
+                type_data = str(row['类型'])
                 note = str(row['备注']) if not pd.isna(row['备注']) else None
 
                 # 处理日期
@@ -645,6 +645,8 @@ def upload_file(current_user):
                                 tzinfo=east_asia_tz)
 
                 # 验证类型
+                type_mapping = {"收入": "income", "支出": "expense"}
+                type_data = type_mapping[type_data]
                 if type_data not in ['income', 'expense']:
                     raise ValueError(f"无效的类型：{type_data}")
 
@@ -686,4 +688,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

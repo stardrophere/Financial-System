@@ -125,7 +125,7 @@ const change_style = () => {
   justify-content: center;
   align-items: center;
   position: relative;
-  margin-bottom: 5vh;
+
 }
 
 .form-box {
