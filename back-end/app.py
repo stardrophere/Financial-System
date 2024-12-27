@@ -18,7 +18,7 @@ CORS(app)
 db_path = "sqlite:///user_info.db"
 app.config['SQLALCHEMY_DATABASE_URI'] = db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your_secret_key'  # 用于生成和验证 JWT 的密钥
+app.config['SECRET_KEY'] = 'manwhatcanisay'  # 用于生成和验证 JWT 的密钥
 
 # 配置上传文件夹
 UPLOAD_FOLDER = 'uploads'
