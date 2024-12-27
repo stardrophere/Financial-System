@@ -1,656 +1,683 @@
-当然，我可以帮助您编写完整的 API 文档。基于您提供的前端代码和之前的讨论，以下是针对您的预算管理系统中使用的主要 API 端点的详细文档。该文档涵盖了身份验证、数据获取以及错误处理等方面。
+# 项目文档
+
+本项目是一个基于 Flask 的 Web 应用，提供用户认证、记录管理、数据汇总和文件上传等功能。本文档包括详细的 API 文档和启动指南，帮助你快速理解和部署应用。
 
 ---
 
-# API 文档
+## 目录
 
-## 概述
-
-本 API 文档详细描述了预算管理系统中各个端点的使用方法，包括请求方法、所需参数、响应格式以及可能的错误响应。所有 API 请求均需通过 JWT（JSON Web Token）进行身份验证。
-
----
-
-## 认证
-
-### 请求头
-
-所有需要认证的 API 端点必须在请求头中包含以下字段：
-
-```http
-Authorization: Bearer <your_jwt_token>
-```
-
-- **Bearer**: 认证类型，固定为 `Bearer`。
-- **<your_jwt_token>**: 用户的 JWT 令牌。
-
-### 错误响应
-
-如果缺少或提供了无效的 JWT 令牌，服务器将返回 `401 Unauthorized` 错误。
-
-**示例响应：**
-
-```json
-{
-  "error": "Invalid or missing authentication token."
-}
-```
+1. [API 文档](#api-文档)
+    - [认证](#认证)
+        - [用户注册](#用户注册)
+        - [用户登录](#用户登录)
+    - [记录管理](#记录管理)
+        - [添加记录](#添加记录)
+        - [获取记录](#获取记录)
+        - [更新记录](#更新记录)
+        - [删除记录](#删除记录)
+    - [数据汇总](#数据汇总)
+        - [获取汇总信息](#获取汇总信息)
+        - [获取分类汇总信息（饼图数据）](#获取分类汇总信息饼图数据)
+    - [文件上传](#文件上传)
+        - [上传 Excel 文件并导入数据库](#上传-excel-文件并导入数据库)
+2. [启动指南](#启动指南)
+    - [前提条件](#前提条件)
+    - [安装步骤](#安装步骤)
+    - [配置](#配置)
+    - [数据库初始化](#数据库初始化)
+    - [运行应用](#运行应用)
+    - [数据库迁移](#数据库迁移)
+    - [常见问题](#常见问题)
 
 ---
 
-## 端点详情
+## API 文档
 
-### 1. 用户注册
+### 认证
 
-#### **Endpoint**
+#### 用户注册
 
-```
-POST /register
-```
+- **URL:** `/register`
+- **方法:** `POST`
+- **描述:** 用户注册，创建一个新用户账户。
 
-#### **描述**
+##### 请求
 
-创建一个新的用户账户。
+- **Headers:** `Content-Type: application/json`
+- **Body:**
 
-#### **请求参数**
-
-| 参数      | 类型   | 必填 | 描述               |
-| --------- | ------ | ---- | ------------------ |
-| username  | string | 是   | 用户名，必须唯一   |
-| password  | string | 是   | 用户密码，至少 6 位 |
-| email     | string | 是   | 用户邮箱，必须唯一 |
-
-#### **请求示例**
-
-```http
-POST /register HTTP/1.1
-Host: your-api-domain.com
-Content-Type: application/json
-
-{
-  "username": "john_doe",
-  "password": "securePassword123",
-  "email": "john@example.com"
-}
-```
-
-#### **成功响应**
-
-**状态码:** `201 Created`
-
-**响应体:**
-
-```json
-{
-  "message": "User registered successfully."
-}
-```
-
-#### **错误响应**
-
-| 状态码 | 描述                                    |
-| ------ | --------------------------------------- |
-| 400    | 请求参数错误（如缺少必填字段、邮箱或用户名已存在） |
-| 500    | 服务器内部错误                          |
-
-**示例响应（用户名已存在）：**
-
-```json
-{
-  "error": "Username already exists."
-}
-```
-
-### 2. 用户登录
-
-#### **Endpoint**
-
-```
-POST /login
-```
-
-#### **描述**
-
-用户登录，获取 JWT 令牌。
-
-#### **请求参数**
-
-| 参数      | 类型   | 必填 | 描述             |
-| --------- | ------ | ---- | ---------------- |
-| username  | string | 是   | 用户名           |
-| password  | string | 是   | 用户密码         |
-
-#### **请求示例**
-
-```http
-POST /login HTTP/1.1
-Host: your-api-domain.com
-Content-Type: application/json
-
-{
-  "username": "john_doe",
-  "password": "securePassword123"
-}
-```
-
-#### **成功响应**
-
-**状态码:** `200 OK`
-
-**响应体:**
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### **错误响应**
-
-| 状态码 | 描述                   |
-| ------ | ---------------------- |
-| 400    | 请求参数错误（如缺少字段） |
-| 401    | 认证失败（用户名或密码错误） |
-| 500    | 服务器内部错误         |
-
-**示例响应（认证失败）：**
-
-```json
-{
-  "error": "Invalid username or password."
-}
-```
-
-### 3. 获取汇总数据
-
-#### **Endpoint**
-
-```
-GET /summary
-```
-
-#### **描述**
-
-根据指定的时间粒度（年、月、日、整体）获取用户的收入、支出和结余汇总数据。
-
-#### **请求参数**
-
-| 参数   | 类型   | 必填 | 描述                                       |
-| ------ | ------ | ---- | ------------------------------------------ |
-| period | string | 是   | 时间粒度，支持的值包括：`year`、`month`、`day`、`overall`。 |
-
-- **`year`**: 按年汇总。
-- **`month`**: 按月汇总。
-- **`day`**: 按日汇总。
-- **`overall`**: 整体汇总。
-
-#### **请求示例**
-
-```http
-GET /summary?period=month HTTP/1.1
-Host: your-api-domain.com
-Authorization: Bearer <your_jwt_token>
-```
-
-#### **成功响应**
-
-**状态码:** `200 OK`
-
-**响应体:**
-
-```json
-{
-  "summary": [
+    ```json
     {
-      "year": 2024,
-      "month": 4,
-      "total_income": 15000,
-      "total_expense": 8000,
-      "balance": 7000
-    },
-    // 根据时间粒度返回多个汇总对象
-  ]
-}
-```
-
-**字段说明:**
-
-| 字段           | 类型    | 描述                                     |
-| -------------- | ------- | ---------------------------------------- |
-| year           | integer | 年份                                     |
-| month          | integer | 月份（仅在 `period` 为 `month` 或 `day` 时存在） |
-| day            | integer | 日期（仅在 `period` 为 `day` 时存在）         |
-| total_income   | number  | 总收入（单位：元）                         |
-| total_expense  | number  | 总支出（单位：元）                         |
-| balance        | number  | 结余（单位：元）                           |
-
-#### **错误响应**
-
-| 状态码 | 描述                                   |
-| ------ | -------------------------------------- |
-| 400    | 请求参数错误（如缺少 `period`）        |
-| 401    | 未授权或令牌无效                       |
-| 500    | 服务器内部错误                         |
-
-**示例响应（缺少参数）：**
-
-```json
-{
-  "error": "缺少必要的参数：period。"
-}
-```
-
-### 4. 获取分类汇总数据（饼图数据）
-
-#### **Endpoint**
-
-```
-GET /summary_pie
-```
-
-#### **描述**
-
-根据指定的时间粒度和时间参数，获取用户的收入和支出分类汇总数据，用于生成饼图。
-
-#### **请求参数**
-
-| 参数   | 类型    | 必填 | 描述                                           |
-| ------ | ------- | ---- | ---------------------------------------------- |
-| period | string  | 是   | 时间粒度，支持的值包括：`year`、`month`、`day`、`overall`。 |
-| year   | integer | 否   | 年份（当 `period` 为 `year`、`month`、`day` 时必填）          |
-| month  | integer | 否   | 月份（当 `period` 为 `month`、`day` 时必填）               |
-| day    | integer | 否   | 日期（当 `period` 为 `day` 时必填）                        |
-
-**注：**
-
-- 当 `period` 为 `overall` 时，不需要提供 `year`、`month` 或 `day` 参数。
-
-#### **请求示例**
-
-1. **按年汇总**
-
-   ```http
-   GET /summary_pie?period=year&year=2024 HTTP/1.1
-   Host: your-api-domain.com
-   Authorization: Bearer <your_jwt_token>
-   ```
-
-2. **按月汇总**
-
-   ```http
-   GET /summary_pie?period=month&year=2024&month=4 HTTP/1.1
-   Host: your-api-domain.com
-   Authorization: Bearer <your_jwt_token>
-   ```
-
-3. **按日汇总**
-
-   ```http
-   GET /summary_pie?period=day&year=2024&month=4&day=27 HTTP/1.1
-   Host: your-api-domain.com
-   Authorization: Bearer <your_jwt_token>
-   ```
-
-4. **整体汇总**
-
-   ```http
-   GET /summary_pie?period=overall HTTP/1.1
-   Host: your-api-domain.com
-   Authorization: Bearer <your_jwt_token>
-   ```
-
-#### **成功响应**
-
-**状态码:** `200 OK`
-
-**响应体:**
-
-```json
-{
-  "period": "month",
-  "year": 2024,
-  "month": 4,
-  "income_categories": [
-    {
-      "category": "工资",
-      "amount": 10000
-    },
-    {
-      "category": "投资",
-      "amount": 5000
+        "username": "字符串，必填，用户名，必须唯一",
+        "password": "字符串，必填，密码"
     }
-  ],
-  "expense_categories": [
-    {
-      "category": "餐饮",
-      "amount": 7000
-    },
-    {
-      "category": "交通",
-      "amount": 2000
-    },
-    {
-      "category": "娱乐",
-      "amount": 1000
-    }
-  ]
-}
-```
+    ```
 
-**字段说明:**
-
-| 字段               | 类型      | 描述                                     |
-| ------------------ | --------- | ---------------------------------------- |
-| period             | string    | 时间粒度，值为 `year`、`month`、`day` 或 `overall` |
-| year               | integer   | 年份（当 `period` 为 `year`、`month`、`day` 时存在） |
-| month              | integer   | 月份（当 `period` 为 `month`、`day` 时存在）          |
-| day                | integer   | 日期（当 `period` 为 `day` 时存在）                   |
-| income_categories  | array     | 收入分类数组，每个元素包含 `category` 和 `amount`        |
-| expense_categories | array     | 支出分类数组，每个元素包含 `category` 和 `amount`       |
-
-**收入分类元素说明:**
-
-| 字段     | 类型   | 描述         |
-| -------- | ------ | ------------ |
-| category | string | 收入类别名称 |
-| amount   | number | 收入金额（单位：元） |
-
-**支出分类元素说明:**
-
-| 字段     | 类型   | 描述         |
-| -------- | ------ | ------------ |
-| category | string | 支出类别名称 |
-| amount   | number | 支出金额（单位：元） |
-
-#### **错误响应**
-
-| 状态码 | 描述                                     |
-| ------ | ---------------------------------------- |
-| 400    | 请求参数错误（如缺少必填参数或格式不正确） |
-| 401    | 未授权或令牌无效                        |
-| 500    | 服务器内部错误                          |
-
-**示例响应（缺少参数）：**
+##### 示例
 
 ```json
 {
-  "error": "缺少必要的参数：year 或 month。"
+    "username": "john_doe",
+    "password": "securepassword123"
 }
 ```
 
----
+##### 成功响应
 
-## 示例请求和响应
+- **状态码:** `201 Created`
+- **Body:**
 
-### 示例 1: 按月汇总
+    ```json
+    {
+        "message": "用户注册成功。"
+    }
+    ```
 
-**请求：**
+##### 失败响应
 
-```http
-GET /summary?period=month HTTP/1.1
-Host: your-api-domain.com
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+- **状态码:** `400 Bad Request`
+- **Body:**
 
-**响应：**
+    ```json
+    {
+        "error": "用户名和密码是必填项。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "用户已存在。"
+    }
+    ```
+
+#### 用户登录
+
+- **URL:** `/login`
+- **方法:** `POST`
+- **描述:** 用户登录，验证用户名和密码，并返回 JWT 令牌。
+
+##### 请求
+
+- **Headers:** `Content-Type: application/json`
+- **Body:**
+
+    ```json
+    {
+        "username": "字符串，必填，用户名",
+        "password": "字符串，必填，密码"
+    }
+    ```
+
+##### 示例
 
 ```json
 {
-  "summary": [
-    {
-      "year": 2024,
-      "month": 4,
-      "total_income": 15000,
-      "total_expense": 8000,
-      "balance": 7000
-    }
-  ]
+    "username": "john_doe",
+    "password": "securepassword123"
 }
 ```
 
-**请求饼图数据：**
+##### 成功响应
 
-```http
-GET /summary_pie?period=month&year=2024&month=4 HTTP/1.1
-Host: your-api-domain.com
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+- **状态码:** `200 OK`
+- **Body:**
 
-**响应：**
+    ```json
+    {
+        "message": "登录成功。",
+        "token": "JWT 令牌"
+    }
+    ```
+
+##### 失败响应
+
+- **状态码:** `400 Bad Request`
+- **Body:**
+
+    ```json
+    {
+        "error": "用户不存在。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "账号或密码错误。"
+    }
+    ```
+
+---
+
+### 记录管理
+
+> **注意:** 以下所有记录管理的 API 需要在请求头中包含 `Authorization` 字段，格式为 `Bearer <JWT Token>`。
+
+#### 添加记录
+
+- **URL:** `/records`
+- **方法:** `POST`
+- **描述:** 添加一条收入或支出记录，关联到当前用户。
+
+##### 请求
+
+- **Headers:**
+    - `Content-Type: application/json`
+    - `Authorization: Bearer <JWT Token>`
+- **Body:**
+
+    ```json
+    {
+        "amount": 1000.0,             // 浮点数，必填，金额
+        "category": "工资",             // 字符串，必填，类别
+        "type": "income",             // 字符串，必填，类型："income" 或 "expense"
+        "note": "备注信息",              // 字符串，可选，备注
+        "timeStamp": 1700000000        // 整数，可选，时间戳（单位：毫秒）
+    }
+    ```
+
+##### 示例
 
 ```json
 {
-  "period": "month",
-  "year": 2024,
-  "month": 4,
-  "income_categories": [
-    {
-      "category": "工资",
-      "amount": 10000
-    },
-    {
-      "category": "投资",
-      "amount": 5000
-    }
-  ],
-  "expense_categories": [
-    {
-      "category": "餐饮",
-      "amount": 7000
-    },
-    {
-      "category": "交通",
-      "amount": 2000
-    },
-    {
-      "category": "娱乐",
-      "amount": 1000
-    }
-  ]
+    "amount": 5000.0,
+    "category": "工资",
+    "type": "income",
+    "note": "五月工资",
+    "timeStamp": 1683000000000
 }
 ```
 
-### 示例 2: 整体汇总
+##### 成功响应
 
-**请求：**
+- **状态码:** `200 OK`
+- **Body:**
 
-```http
-GET /summary?period=overall HTTP/1.1
-Host: your-api-domain.com
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+    ```json
+    {
+        "message": "记录添加成功。"
+    }
+    ```
 
-**响应：**
+##### 失败响应
+
+- **状态码:** `400 Bad Request`
+- **Body:**
+
+    ```json
+    {
+        "error": "无效的时间戳。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "记录添加失败",
+        "details": "错误详情信息"
+    }
+    ```
+
+#### 获取记录
+
+- **URL:** `/records`
+- **方法:** `GET`
+- **描述:** 获取当前用户的所有收入或支出记录。
+
+##### 请求
+
+- **Headers:**
+    - `Authorization: Bearer <JWT Token>`
+
+##### 成功响应
+
+- **状态码:** `200 OK`
+- **Body:**
+
+    ```json
+    [
+        {
+            "id": 1,
+            "amount": 5000.0,
+            "category": "工资",
+            "date": "2024-05-01 09:00",
+            "time": "2024-05-01 09:00",
+            "timeStamp": 1714537200000,
+            "type": "income",
+            "note": "五月工资"
+        },
+        {
+            "id": 2,
+            "amount": 200.0,
+            "category": "餐饮",
+            "date": "2024-05-02 12:30",
+            "time": "2024-05-02 12:30",
+            "timeStamp": 1714629000000,
+            "type": "expense",
+            "note": "午餐"
+        }
+        // 更多记录...
+    ]
+    ```
+
+#### 更新记录
+
+- **URL:** `/records/<record_id>`
+- **方法:** `PUT`
+- **描述:** 更新指定的记录信息。
+
+##### 请求
+
+- **Headers:**
+    - `Content-Type: application/json`
+    - `Authorization: Bearer <JWT Token>`
+- **URL 参数:**
+    - `record_id` (整数，必填，记录的唯一标识符)
+- **Body:**
+
+    ```json
+    {
+        "amount": 6000.0,              // 浮点数，可选，新的金额
+        "category": "奖金",             // 字符串，可选，新的类别
+        "type": "income",              // 字符串，可选，新的类型："income" 或 "expense"
+        "timeStamp": 1700000000,       // 整数，可选，新的时间戳（单位：毫秒）
+        "note": "更新后的备注"            // 字符串，可选，新的备注
+    }
+    ```
+
+##### 示例
 
 ```json
 {
-  "summary": [
-    {
-      "year": 2024,
-      "total_income": 180000,
-      "total_expense": 96000,
-      "balance": 84000
-    }
-  ]
+    "amount": 5500.0,
+    "note": "修正金额"
 }
 ```
 
-**请求饼图数据：**
+##### 成功响应
 
-```http
-GET /summary_pie?period=overall HTTP/1.1
-Host: your-api-domain.com
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+- **状态码:** `200 OK`
+- **Body:**
 
-**响应：**
-
-```json
-{
-  "period": "overall",
-  "income_categories": [
+    ```json
     {
-      "category": "工资",
-      "amount": 120000
-    },
-    {
-      "category": "投资",
-      "amount": 60000
+        "message": "记录更新成功。",
+        "updated_date": "2024-05-01 10:00"
     }
-  ],
-  "expense_categories": [
+    ```
+
+##### 失败响应
+
+- **状态码:** `404 Not Found`
+- **Body:**
+
+    ```json
     {
-      "category": "餐饮",
-      "amount": 50000
-    },
-    {
-      "category": "交通",
-      "amount": 20000
-    },
-    {
-      "category": "娱乐",
-      "amount": 26000
+        "error": "记录未找到。"
     }
-  ]
-}
-```
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "无效的时间戳。"
+    }
+    ```
+
+#### 删除记录
+
+- **URL:** `/records/<record_id>`
+- **方法:** `DELETE`
+- **描述:** 删除指定的记录。
+
+##### 请求
+
+- **Headers:**
+    - `Authorization: Bearer <JWT Token>`
+- **URL 参数:**
+    - `record_id` (整数，必填，记录的唯一标识符)
+
+##### 成功响应
+
+- **状态码:** `200 OK`
+- **Body:**
+
+    ```json
+    {
+        "message": "记录删除成功。"
+    }
+    ```
+
+##### 失败响应
+
+- **状态码:** `404 Not Found`
+- **Body:**
+
+    ```json
+    {
+        "error": "记录未找到。"
+    }
+    ```
 
 ---
 
-## 注意事项
+### 数据汇总
 
-1. **数据一致性**：
-   - 确保前端在发送请求时提供的时间参数与后端数据库中的数据保持一致，避免因时区或格式问题导致的数据不匹配。
+#### 获取汇总信息
 
-2. **性能优化**：
-   - 对于数据量较大的请求（如 `overall`），建议在后端进行分页或数据聚合，以优化响应时间和减少带宽占用。
+- **URL:** `/summary`
+- **方法:** `GET`
+- **描述:** 获取当前用户的收入、支出和结余的汇总信息，支持按年、月、日或自定义时间范围。
 
-3. **安全性**：
-   - 确保 JWT 令牌的安全存储，避免在客户端暴露敏感信息。
-   - 后端应对所有输入参数进行严格验证，防止 SQL 注入或其他安全漏洞。
+##### 请求
 
-4. **错误处理**：
-   - 前端应根据不同的错误类型（如 `400`、`401`、`500`）提供相应的用户反馈和处理逻辑。
-   - 后端应提供清晰的错误信息，帮助前端开发者和用户理解问题所在。
+- **Headers:**
+    - `Authorization: Bearer <JWT Token>`
+- **查询参数:**
+    - `period` (字符串，可选，取值 `'year'`、`'month'`、`'day'`、`'overall'` 或 `'custom'`。默认 `'overall'`)
+    - `start_date` (字符串，可选，格式 `'YYYY-MM-DD'`，仅在 `period=custom` 时有效)
+    - `end_date` (字符串，可选，格式 `'YYYY-MM-DD'`，仅在 `period=custom` 时有效)
 
-5. **版本管理**：
-   - 在 API 文档中注明版本信息，方便未来的更新和维护。
-   - 例如，可以在每个端点的描述中添加版本号，如 `/summary (v1)`。
+##### 示例请求
+
+- 按年汇总:
+
+    ```
+    GET /summary?period=year
+    ```
+
+- 自定义时间范围:
+
+    ```
+    GET /summary?period=custom&start_date=2024-01-01&end_date=2024-06-30
+    ```
+
+##### 成功响应
+
+- **状态码:** `200 OK`
+- **Body 示例:**
+
+    - **按年:**
+
+        ```json
+        {
+            "period": "year",
+            "summary": [
+                {
+                    "year": 2024,
+                    "total_income": 60000.0,
+                    "total_expense": 30000.0,
+                    "balance": 30000.0
+                },
+                {
+                    "year": 2025,
+                    "total_income": 70000.0,
+                    "total_expense": 35000.0,
+                    "balance": 35000.0
+                }
+            ]
+        }
+        ```
+
+    - **自定义时间范围:**
+
+        ```json
+        {
+            "period": "custom",
+            "summary": [
+                {
+                    "year": 2024,
+                    "month": 1,
+                    "day": 15,
+                    "total_income": 5000.0,
+                    "total_expense": 2000.0,
+                    "balance": 3000.0
+                },
+                {
+                    "year": 2024,
+                    "month": 1,
+                    "day": 20,
+                    "total_income": 3000.0,
+                    "total_expense": 1500.0,
+                    "balance": 1500.0
+                }
+                // 更多汇总数据...
+            ]
+        }
+        ```
+
+    - **整体汇总:**
+
+        ```json
+        {
+            "period": "overall",
+            "summary": [
+                {
+                    "total_income": 130000.0,
+                    "total_expense": 65000.0,
+                    "balance": 65000.0
+                }
+            ]
+        }
+        ```
+
+##### 失败响应
+
+- **状态码:** `400 Bad Request`
+- **Body:**
+
+    ```json
+    {
+        "error": "无效的 period 参数。可选值为 'year'、'month'、'day'、'overall' 或 'custom'。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "获取汇总信息时出错。"
+    }
+    ```
+
+#### 获取分类汇总信息（饼图数据）
+
+- **URL:** `/summary_pie`
+- **方法:** `GET`
+- **描述:** 获取当前用户的收入和支出按类别的汇总信息，适用于生成饼图。
+
+##### 请求
+
+- **Headers:**
+    - `Authorization: Bearer <JWT Token>`
+- **查询参数:**
+    - `period` (字符串，可选，取值 `'year'`、`'month'`、`'day'`、`'overall'`。默认 `'overall'`)
+    - `year` (整数，可选，当 `period` 为 `'year'`、`'month'` 或 `'day'` 时必填)
+    - `month` (整数，可选，当 `period` 为 `'month'` 或 `'day'` 时必填)
+    - `day` (整数，可选，当 `period` 为 `'day'` 时必填)
+
+##### 示例请求
+
+- 按年分类汇总:
+
+    ```
+    GET /summary_pie?period=year&year=2024
+    ```
+
+- 按月分类汇总:
+
+    ```
+    GET /summary_pie?period=month&year=2024&month=5
+    ```
+
+- 按天分类汇总:
+
+    ```
+    GET /summary_pie?period=day&year=2024&month=5&day=15
+    ```
+
+##### 成功响应
+
+- **状态码:** `200 OK`
+- **Body 示例:**
+
+    - **按年:**
+
+        ```json
+        {
+            "period": "year",
+            "year": 2024,
+            "income_categories": [
+                {"category": "工资", "amount": 50000.0},
+                {"category": "投资", "amount": 10000.0}
+            ],
+            "expense_categories": [
+                {"category": "餐饮", "amount": 15000.0},
+                {"category": "交通", "amount": 5000.0}
+            ]
+        }
+        ```
+
+    - **按月:**
+
+        ```json
+        {
+            "period": "month",
+            "year": 2024,
+            "month": 5,
+            "income_categories": [
+                {"category": "工资", "amount": 5000.0},
+                {"category": "奖金", "amount": 2000.0}
+            ],
+            "expense_categories": [
+                {"category": "餐饮", "amount": 2000.0},
+                {"category": "娱乐", "amount": 1000.0}
+            ]
+        }
+        ```
+
+    - **整体汇总:**
+
+        ```json
+        {
+            "period": "overall",
+            "income_categories": [
+                {"category": "工资", "amount": 130000.0},
+                {"category": "投资", "amount": 20000.0}
+            ],
+            "expense_categories": [
+                {"category": "餐饮", "amount": 30000.0},
+                {"category": "交通", "amount": 10000.0},
+                {"category": "娱乐", "amount": 5000.0}
+            ]
+        }
+        ```
+
+##### 失败响应
+
+- **状态码:** `400 Bad Request`
+- **Body:**
+
+    ```json
+    {
+        "error": "无效的 period 参数。可选值为 'year'、'month'、'day' 或 'overall'。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "缺少必要的参数：year。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "获取分类汇总信息时出错。"
+    }
+    ```
 
 ---
 
-## 更新日志
+### 文件上传
 
-| 版本 | 日期       | 更新内容                     |
-| ---- | ---------- | ---------------------------- |
-| 1.0  | 2024-04-27 | 初始文档发布                 |
-| 1.1  | 2024-05-15 | 增加整体汇总功能的说明       |
-| 1.2  | 2024-06-10 | 优化错误响应描述             |
-| 1.3  | 2024-07-20 | 添加用户注册和登录端点       |
-| ...  | ...        | ...                          |
+#### 上传 Excel 文件并导入数据库
 
----
+- **URL:** `/upload`
+- **方法:** `POST`
+- **描述:** 上传一个 Excel 文件，解析文件内容并将数据导入 `Record` 表。
 
-## 联系方式
+##### 请求
 
-如果您在使用 API 时遇到任何问题或有任何建议，请通过以下方式联系我们：
+- **Headers:**
+    - `Content-Type: multipart/form-data`
+    - `Authorization: Bearer <JWT Token>`
+- **Body:**
+    - `file`: Excel 文件，必须为 `.xls` 或 `.xlsx` 格式。
 
-- **电子邮件**: support@your-domain.com
-- **电话**: +86-123-4567-8901
-- **在线支持**: [your-support-page.com](http://your-support-page.com)
+##### 示例
 
----
-
-## 附录
-
-### API 版本策略
-
-- **主版本号 (Major)**: 当您做了不兼容的 API 修改时，增加主版本号。
-- **次版本号 (Minor)**: 当您在保持向后兼容的前提下添加了功能时，增加次版本号。
-- **修订号 (Patch)**: 当您做了向后兼容的问题修正时，增加修订号。
-
-例如，`v1.0.0` 表示第一个主要版本，后续更新可为 `v1.1.0`、`v1.1.1` 等。
-
-### 认证令牌
-
-- **获取令牌**: 用户通过 `/login` 端点获取 JWT 令牌。
-- **使用令牌**: 在每个需要认证的 API 请求中，在请求头中包含 `Authorization: Bearer <token>`。
-- **令牌过期**: JWT 令牌具有有效期，过期后需要重新登录获取新令牌。
-
----
-
-## 常见问题 (FAQ)
-
-### 1. 如何获取 JWT 令牌？
-
-用户需要通过 `/login` 端点使用有效的用户名和密码进行认证，成功后将收到 JWT 令牌。
-
-### 2. 如果 JWT 令牌过期怎么办？
-
-用户需要重新登录，通过 `/login` 端点获取新的 JWT 令牌。
-
-### 3. 如何处理 `400 Bad Request` 错误？
-
-确保所有必填参数已正确提供，参数格式符合要求。查看错误响应中的详细信息以了解具体问题。
-
-### 4. 如何处理 `401 Unauthorized` 错误？
-
-确认请求头中包含有效的 `Authorization` 令牌。如果令牌已过期，请重新登录获取新的令牌。
-
-### 5. 如果遇到 `500 Internal Server Error`，该如何处理？
-
-这是服务器内部错误，建议联系系统管理员或技术支持团队，提供错误日志以便排查问题。
-
----
-
-## 示例代码
-
-以下是使用 `curl` 命令行工具进行 API 请求的示例。
-
-### 用户注册
+使用 `curl` 命令上传文件：
 
 ```bash
-curl -X POST http://your-api-domain.com/register \
--H "Content-Type: application/json" \
--d '{
-  "username": "john_doe",
-  "password": "securePassword123",
-  "email": "john@example.com"
-}'
+curl -X POST http://localhost:5000/upload \
+  -H "Authorization: Bearer <JWT Token>" \
+  -F "file=@/path/to/your/file.xlsx"
 ```
 
-### 用户登录
+##### 成功响应
 
-```bash
-curl -X POST http://your-api-domain.com/login \
--H "Content-Type: application/json" \
--d '{
-  "username": "john_doe",
-  "password": "securePassword123"
-}'
-```
+- **状态码:** `200 OK`
+- **Body:**
 
-### 获取汇总数据
+    ```json
+    {
+        "message": "文件上传并导入成功。",
+        "imported_records": 50
+    }
+    ```
 
-```bash
-curl -X GET "http://your-api-domain.com/summary?period=month" \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
+##### 失败响应
 
-### 获取分类汇总数据（饼图数据）
+- **状态码:** `400 Bad Request`
+- **Body:**
 
-```bash
-curl -X GET "http://your-api-domain.com/summary_pie?period=month&year=2024&month=4" \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
+    ```json
+    {
+        "error": "未找到文件。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "无效的文件类型。只能上传 .xls 或 .xlsx 文件。"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "Excel 文件缺少必要的列。缺少列：时间, 类别"
+    }
+    ```
+
+    或
+
+    ```json
+    {
+        "error": "处理文件时出错。"
+    }
+    ```
 
 ---
-
-## 附加资源
-
-- **API 测试工具**: [Postman](https://www.postman.com/)
-- **JWT 详解**: [JWT官方文档](https://jwt.io/introduction/)
-- **安全最佳实践**: [OWASP REST Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html)
-
----
-
-希望以上文档能帮助您更好地理解和使用预算管理系统的 API。如果有任何进一步的问题或需要更多详细信息，请随时与我们联系！
