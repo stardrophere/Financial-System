@@ -6,7 +6,8 @@ import 'element-plus/dist/index.css'; // 引入 Element Plus 的样式
 import axios from 'axios'; // 引入 axios
 
 // 设置全局的基础URL
-axios.defaults.baseURL = 'http://10.252.130.135:5000/';
+// axios.defaults.baseURL = 'http://10.252.130.135:5000/';
+axios.defaults.baseURL = 'http://localhost:5000/';
 
 // 请求拦截器：在每个请求中添加 Authorization 头
 axios.interceptors.request.use(

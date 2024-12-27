@@ -698,11 +698,12 @@ curl -X POST http://localhost:5000/upload \
 1. **克隆仓库**
 
 
-    ```bash
-    git clone https://github.com/stardrophere/LLM-homework.git
-    cd LLM-homework
-    ```
+```bash
 
+git clone https://github.com/stardrophere/LLM-homework.git
+cd back-end
+
+```
 
 2. **创建虚拟环境**
 
