@@ -1,16 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import {createRouter, createWebHistory} from 'vue-router';
 import Home from '@/views/Home.vue';
 import Records from '@/views/Records.vue';
 import LoginRegister from '@/views/LRView.vue';
 import Charts from "@/views/Charts.vue";
-import Favorites from "@/views/Favorites.vue";
+import Reports from "@/views/Reports.vue";
 
 const routes = [
-    {
-        path: '/',
-        name: 'Home',
-        component: Home,
-    },
+
     {
         path: '/loginRegister',
         name: 'LoginRegister',
@@ -27,15 +23,20 @@ const routes = [
         component: Charts,
     },
     {
-        path: '/favorites',
-        name: 'Favorites',
-        component: Favorites,
+        path: '/reports',
+        name: 'Reports',
+        component: Reports,
     },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/loginRegister',
+    }
 ];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
+
 });
 
 export default router;

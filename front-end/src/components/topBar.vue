@@ -30,7 +30,7 @@
     <!-- 其他菜单项 -->
     <el-menu-item index="/records" @click="navigateTo('/records')">收支记录</el-menu-item>
     <el-menu-item index="/charts" @click="navigateTo('/charts')">图表</el-menu-item>
-    <el-menu-item index="/favorites" @click="navigateTo('/favorites')">收藏</el-menu-item>
+    <el-menu-item index="/reports" @click="navigateTo('/reports')">报告</el-menu-item>
   </el-menu>
 </template>
 
@@ -45,7 +45,7 @@ const router = useRouter()
 
 // 处理菜单项选择
 const handleSelect = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
+  // console.log(key, keyPath)
 }
 
 // 处理下拉菜单项点击

@@ -2,13 +2,13 @@
   <div class="back-ground">
     <TopBar class="top-bar"/>
     <div class="page-container">
-      <RecordTable/>
+      <RenderReports/>
     </div>
   </div>
 </template>
 
 <script setup>
-import RecordTable from "@/components/RecordTable.vue";
+import RenderReports from '@/components/RenderReport.vue'
 import TopBar from "@/components/TopBar.vue";
 </script>
 
@@ -20,13 +20,8 @@ import TopBar from "@/components/TopBar.vue";
   left: 0;
   width: 100%;
   z-index: 1000; /* 确保顶部栏在最上层 */
+}
 
-}
-.back-ground {
-  height: 100vh;
-  width: 100%;
-  background: linear-gradient(to right, #e0eafc, #cfdef3);
-}
 /* 页面内容容器 */
 .page-container {
   display: flex;
@@ -37,6 +32,7 @@ import TopBar from "@/components/TopBar.vue";
   /* 可选：添加背景样式 */
   background: linear-gradient(to right, #e0eafc, #cfdef3);
   min-height: 92vh;
+
 }
 
 /* 响应式调整（可选） */
@@ -44,5 +40,11 @@ import TopBar from "@/components/TopBar.vue";
   .page-container {
     padding-top: 60px; /* 根据顶部栏在小屏幕上的高度调整 */
   }
+}
+
+.back-ground {
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(to right, #e0eafc, #cfdef3);
 }
 </style>

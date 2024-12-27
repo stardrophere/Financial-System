@@ -294,18 +294,21 @@ def delete_record(current_user, record_id):
 def get_summary(current_user):
     """
     获取汇总信息。
-    根据前端指定的时间粒度（年、月、日），返回当前用户的收入、支出和结余的汇总信息。
+    根据前端指定的时间粒度（年、月、日，或自定义时间范围），返回当前用户的收入、支出和结余的汇总信息。
 
     请求参数：
-    - period: string (可选，'year'、'month'、'day' 或 'overall')
+    - period: string (可选，'year'、'month'、'day' 或 'overall' 或 'custom')
+    - start_date: string (可选，开始日期，仅在 period 为 'custom' 时有效)
+    - end_date: string (可选，结束日期，仅在 period 为 'custom' 时有效)
 
     返回：
     成功：
     {
-        "period": "year" | "month" | "day" | "overall",
+        "period": "year" | "month" | "day" | "overall" | "custom",
         "summary": [
             {
                 "year": 2024,
+                "month": 5,
                 "total_income": 50000,
                 "total_expense": 30000,
                 "balance": 20000
@@ -314,13 +317,25 @@ def get_summary(current_user):
         ]
     }
     """
-    # 获取查询参数 'period'
+    # 获取查询参数 'period' 和可选的时间范围
     period = request.args.get('period', default='overall').lower()
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
-    if period not in ['year', 'month', 'day', 'overall']:
-        return jsonify({"error": "无效的 period 参数。可选值为 'year'、'month'、'day' 或 'overall'."}), 400
+    if period not in ['year', 'month', 'day', 'overall', 'custom']:
+        return jsonify({"error": "无效的 period 参数。可选值为 'year'、'month'、'day'、'overall' 或 'custom'."}), 400
 
     try:
+        # 自定义时间范围处理
+        filters = [Record.user_id == current_user.id]
+        # 转换字符串为 datetime 对象
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date + " 23:59", '%Y-%m-%d %H:%M')
+
+            filters.append(Record.date >= start_date)
+            filters.append(Record.date <= end_date)
+
         if period == 'year':
             summary_query = db.session.query(
                 extract('year', Record.date).label('year'),
@@ -332,7 +347,7 @@ def get_summary(current_user):
                     (Record.type == 'expense', Record.amount),
                     else_=0
                 )).label('total_expense')
-            ).filter_by(user_id=current_user.id).group_by('year').order_by('year').all()
+            ).filter(*filters).group_by('year').order_by('year').all()
 
             summary = [
                 {
@@ -356,7 +371,7 @@ def get_summary(current_user):
                     (Record.type == 'expense', Record.amount),
                     else_=0
                 )).label('total_expense')
-            ).filter_by(user_id=current_user.id).group_by('year', 'month').order_by('year', 'month').all()
+            ).filter(*filters).group_by('year', 'month').order_by('year', 'month').all()
 
             summary = [
                 {
@@ -382,7 +397,7 @@ def get_summary(current_user):
                     (Record.type == 'expense', Record.amount),
                     else_=0
                 )).label('total_expense')
-            ).filter_by(user_id=current_user.id).group_by('year', 'month', 'day').order_by('year', 'month', 'day').all()
+            ).filter(*filters).group_by('year', 'month', 'day').order_by('year', 'month', 'day').all()
 
             summary = [
                 {
@@ -406,13 +421,40 @@ def get_summary(current_user):
                     (Record.type == 'expense', Record.amount),
                     else_=0
                 )).label('total_expense')
-            ).filter_by(user_id=current_user.id).one()
+            ).filter(*filters).one()
 
             summary = [{
                 "total_income": overall_summary.total_income or 0,
                 "total_expense": overall_summary.total_expense or 0,
                 "balance": (overall_summary.total_income or 0) - (overall_summary.total_expense or 0)
             }]
+
+        elif period == 'custom':
+            summary_query = db.session.query(
+                extract('year', Record.date).label('year'),
+                extract('month', Record.date).label('month'),
+                extract('day', Record.date).label('day'),
+                func.sum(case(
+                    (Record.type == 'income', Record.amount),
+                    else_=0
+                )).label('total_income'),
+                func.sum(case(
+                    (Record.type == 'expense', Record.amount),
+                    else_=0
+                )).label('total_expense')
+            ).filter(*filters).group_by('year', 'month', 'day').order_by('year', 'month', 'day').all()
+
+            summary = [
+                {
+                    "year": int(row.year),
+                    "month": int(row.month),
+                    "day": int(row.day),
+                    "total_income": row.total_income or 0,
+                    "total_expense": row.total_expense or 0,
+                    "balance": (row.total_income or 0) - (row.total_expense or 0)
+                }
+                for row in summary_query
+            ]
 
         return jsonify({
             "period": period,

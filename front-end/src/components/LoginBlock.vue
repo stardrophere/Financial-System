@@ -11,7 +11,7 @@
 
         <!-- 密码输入框 -->
         <el-form-item label="密码" prop="password">
-          <el-input v-model="loginForm.password" placeholder="请输入密码" type="password"/>
+          <el-input v-model="loginForm.password" placeholder="请输入密码" type="password" @keyup.enter="onSubmit"/>
         </el-form-item>
 
       </el-form>

@@ -9,7 +9,7 @@
 
           <div class="register-box" v-show=show_change>
             <h1>register</h1>
-            <registerBlock/>
+            <registerBlock @change="change_style"/>
 
           </div>
           <!-- 登录 -->

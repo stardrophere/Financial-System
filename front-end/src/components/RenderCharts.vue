@@ -159,7 +159,7 @@ const getTimeDescription = () => {
   const {period, year, month, day} = pieData.value;
   if (period === 'year') {
     return `${year}年的`;
-  } else if (period === 'month的') {
+  } else if (period === 'month') {
     return `${year}年${month}月的`;
   } else if (period === 'day') {
     return `${year}年${month}月${day}日的`;

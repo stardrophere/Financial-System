@@ -2,15 +2,16 @@
   <div class="register-container">
     <el-card class="register-card" shadow="hover">
 
-      <el-form :model="registerForm" :rules="rules" ref="registerFormRef" label-width="10px"  label-position="top" size="large">
+      <el-form :model="registerForm" :rules="rules" ref="registerFormRef" label-width="10px" label-position="top"
+               size="large">
         <!-- 用户名输入框 -->
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="registerForm.username" placeholder="请输入用户名" />
+          <el-input v-model="registerForm.username" placeholder="请输入用户名"/>
         </el-form-item>
 
         <!-- 密码输入框 -->
         <el-form-item label="密码" prop="password">
-          <el-input v-model="registerForm.password" placeholder="请输入密码" type="password" />
+          <el-input v-model="registerForm.password" placeholder="请输入密码" type="password" @keyup.enter="onSubmit"/>
         </el-form-item>
 
       </el-form>
@@ -23,9 +24,11 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import {reactive, ref} from 'vue';
+import {ElMessage} from 'element-plus';
 import axios from "axios";
+
+const emit = defineEmits(["change"])
 
 // 注册表单数据
 const registerForm = reactive({
@@ -36,10 +39,10 @@ const registerForm = reactive({
 // 表单验证规则
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
+    {required: true, message: '请输入用户名', trigger: 'blur'},
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
+    {required: true, message: '请输入密码', trigger: 'blur'},
   ],
 };
 
@@ -57,12 +60,15 @@ const onSubmit = () => {
 };
 
 
-
 const register = async () => {
   try {
     await axios.post("/register", registerForm);
+    Object.assign(registerForm, {
+      username: '',
+      password: '',
+    });
     ElMessage.success('注册成功！');
-
+    emit('change');
   } catch (error) {
     ElMessage.error(error.response.data.error);
   }
@@ -99,7 +105,7 @@ const register = async () => {
   width: 100%;
 }
 
-.button_type{
+.button_type {
   width: 100%;
 }
 </style>

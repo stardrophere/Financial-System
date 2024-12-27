@@ -1,5 +1,5 @@
 <script setup>
-import V1 from "@/components/v1.vue";
+import V1 from "@/components/Prototype.vue";
 
 </script>
 

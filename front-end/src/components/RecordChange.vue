@@ -63,7 +63,7 @@
     <!-- 描述文本框 -->
     <el-form-item label="备注">
       <!-- 文本框，`v-model` 双向绑定 `recordForm.note` -->
-      <el-input v-model="recordForm.note" type="textarea" maxlength="50"/>
+      <el-input v-model="recordForm.note" type="textarea" maxlength="20" show-word-limit/>
     </el-form-item>
 
     <!-- 提交按钮与取消按钮 -->
