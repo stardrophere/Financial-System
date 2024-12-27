@@ -38,7 +38,7 @@ import RenderCharts from "@/components/RenderCharts.vue";
   padding: 20px; /* 可选：添加内边距 */
   padding-top: 75px; /* 根据顶部栏高度调整 */
   /* 可选：添加背景样式 */
-  background: linear-gradient(to right, #e0eafc, #cfdef3);
+  background: linear-gradient(200deg, #f3e7e9, #cddffa);
   min-height: 92vh;
 
 }
