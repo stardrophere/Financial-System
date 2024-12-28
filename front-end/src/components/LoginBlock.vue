@@ -67,7 +67,9 @@ const loginIn = async () => {
     const token = response.data.token;
     localStorage.setItem("token", token);
     ElMessage.success("登录成功");
-    await navigateTo("/records");
+    setTimeout(() => {
+      window.location.href = '/records';  // 自动跳转至列表页面
+    }, 500);
     // setTimeout(()=>navigateTo("/records"),500);
 
   } catch (error) {
