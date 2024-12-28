@@ -52,12 +52,59 @@ npm run build
 
 构建完成后，生成的文件将位于 `dist` 目录中。
 
+## 前端目录
+
+
+```
+front-end/
+├── node_modules/
+├── public/
+│   ├── favicon.ico
+│   ├── logo.ico
+├── src/
+│   ├── assets/
+│   │   ├── base.css
+│   │   ├── expense.svg
+│   │   ├── income.svg
+│   │   ├── logo.webp
+│   │   ├── main.css
+│   ├── components/
+│   │   ├── LoginBlock.vue
+│   │   ├── RegisterBlock.vue
+│   │   ├── RecordChange.vue
+│   │   ├── RecordTable.vue
+│   │   ├── RenderCharts.vue
+│   │   ├── RenderReport.vue
+│   │   ├── Prototype.vue
+│   │   ├── topBar.vue
+│   ├── config/
+│   │   ├── colors.js
+│   ├── router/
+│   │   ├── index.js
+│   ├── views/
+│   │   ├── Home.vue
+│   │   ├── Charts.vue
+│   │   ├── LRView.vue
+│   │   ├── Records.vue
+│   │   ├── Reports.vue
+│   ├── App.vue
+│   ├── main.js
+├── .gitignore
+├── index.html
+├── jsconfig.json
+├── package.json
+├── package-lock.json
+├── README.md
+├── vite.config.js
+
+```
+
 
 ## 其他命令
 
 - `npm run lint`：运行代码检查工具以确保代码风格一致。
 - `npm run lint --fix`：自动修复代码中的可修复问题。
 
-## 结束
+## 请求支持
 
-以上就是项目的基本启动指南。如果您在启动过程中遇到任何问题，请参考项目的文档或联系项目维护者。
+以上就是项目的基本启动指南。如果您在启动过程中遇到任何问题，请参考项目的文档或联系项目维护者邮箱`1925008984@qq.com`。
