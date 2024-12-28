@@ -53,7 +53,8 @@ const registerFormRef = ref(null);
 const onSubmit = () => {
   registerFormRef.value.validate((valid) => {
     if (valid) {
-      register();
+      if (registerForm.password.length >= 6) register();
+      else ElMessage.error('密码长度不得小于6位');
     } else {
       ElMessage.error('请填写完整的注册信息');
     }
