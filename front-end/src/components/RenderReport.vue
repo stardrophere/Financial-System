@@ -112,7 +112,6 @@
 import {ref, onMounted, watch, nextTick} from 'vue';
 import axios from 'axios';
 import * as echarts from 'echarts';
-import html2pdf from 'html2pdf.js';
 import {ElMessage} from 'element-plus';
 import html2canvas from 'html2canvas';
 
@@ -311,18 +310,6 @@ const renderPieCharts = () => {
   expensePieChartInstance.setOption(expenseOption);
 };
 
-
-const downloadPDF = () => {
-  const element = document.querySelector('.report-preview');
-  const opt = {
-    margin: 0.5,
-    filename: `财务信息报告_${reportPeriod.value}.pdf`,
-    image: {type: 'jpeg', quality: 0.98},
-    html2canvas: {scale: 2},
-    jsPDF: {unit: 'in', format: 'letter', orientation: 'portrait'}
-  };
-  html2pdf().set(opt).from(element).save();
-};
 
 const downloadImage = async () => {
   const element = document.querySelector('.report-preview'); // 选择要截图的元素
